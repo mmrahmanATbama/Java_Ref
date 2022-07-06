@@ -1,0 +1,330 @@
+	Units: 318 - 324 (Add Example Program at the end for Reference)
+	
+	Junit Vocabulary:
+		a. assertTrue
+		b. assertFalse
+		c. assertEqual
+		d. assertNotEqual
+		e. assertSame
+		f. assertNotSame
+		g. assertNull
+		h. assertArrayEquals
+		i. assertArrayNotEquals
+		j. exception
+
+Project Strucuture, library, add jar and under the jar add source.
+
+
+
+	318. Java Unit Testing: (16.20)  10.50 pm - 11.52 pm
+		a. Unit testing, performed by developer or development team. 
+		b.  In Java, a unit is usually a method. 
+		c. Unit testing framework, build process will run automated test. 
+		d. Junit is a popular test framework. 
+		e. Intellij ship with Junit library but does not add it into project. It needs to be added in the library.
+		f. Two ways to add Junit library:
+			i. File -> Project Structure -> library
+			ii. Click on the Class Name, ALT ENTER, this will give option to add Junit test  ->    public class Utilities { (click on Utilities)
+			iii. After the test class is created, File -> Project Structure -> Module -> Dependency -> Change Test to Compile
+			iv. Cleaner way: Create Test, go beside junit, press "Alt Enter" and then add Junit to class path. This requires less steps.
+		g. Unit test is testing a method, so method is a test method. 
+		h. Create Run Configuration: 
+		i. Right Click anywhere outside method, (from the right click pane) then select "Modify Run Configuration", default options are correct.
+		j. Notice upper right side, the name of the Test Class has been added. Change this to main or Test to run the corresponding class.
+		k. fail("This test need to be implemented");
+	319. Assert in Junit: 
+		a.     @org.junit.Test
+		    public void dummyTest(){
+		        assertEquals(20,21);
+		    }
+		b. Notice only one method test can be run.
+		c. if Deleting a method, Top right, edit configuration and then remove the dummy test, so intellij does not get confused later.+
+		d. AssertEquals can have delta, this allows some lee away.
+		e. We can have instance variable in the test class.
+		f. A test should be able to run and pass on its own.
+		g. One test per assertion (test condition)
+		h. Test method should give some indication the test being run.
+		i. While testing a value against true or false, it is best to test against "assertTrue" or "assertFalse"
+		j. In case of "I", using a message is the best practice. That message will show up when the test fails. Passed test does not show it.
+		k. assertEquals() and assertNotEquals()
+		l. assertTrue() and assertFalse() :  assertTrue("checking account", account.isChecking());
+	320. More Asserts and Exception: (16.34) (5.30 pm - 6.20 pm)
+		a. assertNotEquals
+		b. assertArrayEquals - assertEquals will not work because it will only consider two array equal if they are the same instance. AssertArrayEqual is true when two arrays have same length, and every element in both are array are same (and in the same order)
+		c. assertNull() and assertNotNull() - makes intention clearer. (can be tested with assertEqual)
+		d. assertSame() and assertNotSame() - Use this to check if two instances are same. assertEquals check for equality, assertSame() compares the object reference.
+		e. assertThat() - From Junit4. Compares actual value against a matcher (not JDK matcher, but a Junit Matcher). More powerful then other asserts, since we can compare the actual value against a range of values.
+		f.    // @Before telling Junit to run the setup() method every time it runs a test. 
+		    @org.junit.Before
+		    public void setup() {
+		        account = new BankAccount("Corey", "Miller", 1000.00, BankAccount.CHECKING);
+		        System.out.println("Running a test ...");
+		    }
+		g.     // Run only once, before any test. Contrasts with @org.junit.Before below.
+		    // Depending on the timing, the statement may print after the test setup has been run.
+		    // It can be out of order.
+		    @org.junit.BeforeClass
+		    public static void beforeClass() {
+		        System.out.println("This executes only once before any test cases. Count = " + count++);
+		    }
+		h.     // Runs after every test.
+		    @org.junit.After
+		    public void tearDown() {
+		        System.out.println("Count = " + count++);
+		    }
+		i.     // Runs after class
+		    // name of the method is not important but the annotation.
+		    @org.junit.AfterClass
+		    public static void afterClass() {
+		        System.out.println("This executes only once after any test cases. Count = " + count++);
+		    }
+		j.     @org.junit.Test(expected = IllegalArgumentException.class)
+		    public void withdraw_notBranch() {
+		        double balance = account.withdraw(600.00, false);
+		        assertEquals(400.00, balance, 0);
+		    }
+	321. Parameterized Tests: (12.21) ()
+		a. (M)    public double withdraw (double amount, boolean branch){
+		        if ((amount > 500.00) && !branch){
+		            throw new IllegalArgumentException();
+		        }
+		        balance -= amount;
+		        return balance;
+		    }
+		(T)    @org.junit.Test(expected = IllegalArgumentException.class)
+		    public void withdraw_notBranch() {
+		        account.withdraw(600.00, false);
+		        fail("Should have thrown an IllegalArgumentException.");
+		    }
+		
+		b. Every test start fresh, that could result in a lot of code, for example if we tried five different deposit amount. 
+		c. Parameterized needs this:
+			i. before Class: @RunWith(Parameterized.class)
+			ii. declare instance variable
+			iii. declare constructor
+			iv. before 
+			v. @Parameterized.Parameters
+			vi. Actual Test method.
+
+
+
+Note: This is just a overview to get started, read documentation to understand more.
+Example:
+	1. Main.
+	2. BankAccount.java (Class being tested)
+	3. BankAccountTest.java
+	4. BankAccountTestParameterized.java
+
+Main
+package com.company;
+
+public class Main {
+
+    public static void main(String[] args) {
+        System.out.println("Main running");
+    }
+}
+
+BankAccount.java
+package com.company;
+
+import javax.swing.*;
+
+public class BankAccount {
+    private String firstName;
+    private String lastName;
+    private double balance;
+
+    public static final int CHECKING = 1;
+    public static final int SAVINGS = 2;
+    private int accountType;
+
+    public BankAccount(String firstName, String lastName, double balance, int typeOfAccount) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.balance = balance;
+        this.accountType = typeOfAccount;
+    }
+
+    /**
+     * True: transaction with teller
+     * False: Transaction in an ATM
+     * @param amount
+     * @param branch
+     * @return Double
+     */
+    public double deposit(double amount, boolean branch){
+        balance += amount;
+        return balance;
+    }
+
+    /**
+     * True: transaction with teller
+     * False: Transaction in an ATM
+     * @param amount
+     * @param branch
+     * @return Double
+     */
+    public double withdraw (double amount, boolean branch){
+        if ((amount > 500.00) && !branch){
+            throw new IllegalArgumentException();
+        }
+        balance -= amount;
+        return balance;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public boolean isChecking() {
+        return accountType == CHECKING;
+    }
+}
+
+BankAccountTest.java
+package com.company;
+
+import static org.junit.Assert.*;
+
+public class BankAccountTest {
+
+    private BankAccount account;
+    private static int count;
+
+    // Run only once, before any test. Contrasts with @org.junit.Before below.
+    // Depending on the timing, the statement may print after the test setup has been run.
+    // It can be out of order.
+    @org.junit.BeforeClass
+    public static void beforeClass() {
+        System.out.println("This executes only once before any test cases. Count = " + count++);
+    }
+
+    // @Before telling Junit to run the setup() method every time it runs a test.
+    // a new BankAccount is being instantiated.
+    @org.junit.Before
+    public void setup() {
+        account = new BankAccount("Corey", "Miller", 1000.00, BankAccount.CHECKING);
+        System.out.println("Running a test ...");
+    }
+
+    @org.junit.Test
+    public void deposit() {
+        double balance = account.deposit(200.00, true);
+        //delta allows some leeaway. Some difference will be allowed to pass
+        assertEquals(1200.00, balance, 0);
+    }
+
+    @org.junit.Test
+    public void withdraw_branch() {
+        double balance = account.withdraw(600.00, true);
+        assertEquals(400.00, balance, 0);
+    }
+
+    @org.junit.Test(expected = IllegalArgumentException.class)
+    public void withdraw_notBranch() {
+        account.withdraw(600.00, false);
+        fail("Should have thrown an IllegalArgumentException.");
+    }
+
+    @org.junit.Test
+    public void getBalance_deposit() {
+        account.deposit(200.00, true);
+        assertEquals(1200.00, account.getBalance(), 0);
+    }
+
+    @org.junit.Test
+    public void getBalance_withdrawal() {
+        account.withdraw(200.00, true);
+        assertEquals(800.00, account.getBalance(), 0);
+    }
+
+    @org.junit.Test
+    public void isChecking_true() {
+        //assertEquals(true, account.isChecking());
+        assertTrue("checking account", account.isChecking());
+
+    }
+
+    // Runs after every test.
+    @org.junit.After
+    public void tearDown() {
+        System.out.println("Count = " + count++);
+    }
+
+    // Runs after class
+    // name of the method is not important but the annotation.
+    @org.junit.AfterClass
+    public static void afterClass() {
+        System.out.println("This executes only once after any test cases. Count = " + count++);
+    }
+
+
+}
+
+BankAccountTestParameterized.java  
+package com.company;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+
+@RunWith(Parameterized.class)
+public class BankAccountTestParameterized {
+    private BankAccount account;
+    private double amount;
+    private boolean branch;
+    private double expected;
+
+    public BankAccountTestParameterized(double amount, boolean branch, double expected) {
+        this.amount = amount;
+        this.branch = branch;
+        this.expected = expected;
+    }
+
+    @org.junit.Before
+    public void setup() {
+        account = new BankAccount("Tim", "Miller", 1000.00, BankAccount.CHECKING);
+        System.out.println("Running a test ...");
+    }
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> testCondition() {
+        return Arrays.asList(new Object[][]{
+                {100.00, true, 1100.00},
+                {200.00, true, 1200.00},
+                {325.14, true, 1325.14},
+                {489.33, true, 1489.33},
+                {1000.00, true, 2000.00}
+        });
+    }
+
+    @org.junit.Test
+    public void deposit() {
+        account.deposit(amount, branch);
+        assertEquals(expected, account.getBalance(), .01);
+    }
+
+}
+
+
+
+
+		
+		
+		
+		
+		
+
